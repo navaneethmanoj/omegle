@@ -20,34 +20,45 @@ export class UserManager {
             socket,name
         })
         this.queue.push(socket.id)
+        socket.emit("lobby")
         this.clearQueue()
         this.initHandlers(socket)
     }
 
     removeUser(socketId: string) {
-        this.users = this.users.filter(x => x.socket.id !== socketId)//check filter logic
-        this.queue = this.queue.filter(x => x !== socketId)//check filter logic
+        const user = this.users.find(x => x.socket.id === socketId)
+
+        this.users = this.users.filter(x => x.socket.id !== socketId)
+        // TODO:
+        this.queue = this.queue.filter(x => x === socketId)
     }
 
     clearQueue(){
         if(this.queue.length<2){
             return
         }
-        const user1 = this.users.find(x => x.socket.id === this.queue.pop())
-        const user2 = this.users.find(x => x.socket.id === this.queue.pop())
+        console.log("Queue:",this.queue)
+        const id1 = this.queue.pop()
+        const id2 = this.queue.pop()
+        const user1 = this.users.find(x => x.socket.id === id1)
+        const user2 = this.users.find(x => x.socket.id === id2)
 
         if (!user1 || !user2)
             return
 
         const room = this.roomManager.createRoom(user1,user2)
+        this.clearQueue()
     }
 
     initHandlers(socket: Socket){
-        socket.on("offer",({sdp,roomId}: {sdp: string,roomId:string}) => {
-            this.roomManager.onOffer(sdp,roomId)
+        socket.on("offer",({sdp,roomId}: {sdp: any,roomId:string}) => {
+            this.roomManager.onOffer(sdp,roomId,socket.id)
         })
-        socket.on("answer",({sdp,roomId}: {sdp: string,roomId:string}) => {
-            this.roomManager.onAnswer(sdp,roomId)
+        socket.on("answer",({sdp,roomId}: {sdp: any,roomId:string}) => {
+            this.roomManager.onAnswer(sdp,roomId,socket.id)
+        })
+        socket.on("new-ice-candidate",({candidate,roomId,type}: {candidate: any,roomId: string,type: "sender" | "receiver"}) => {
+            this.roomManager.onIceCandidate(candidate,roomId,type,socket.id)
         })
     }
 }

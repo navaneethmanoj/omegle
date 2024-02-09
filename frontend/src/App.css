@@ -1,0 +1,62 @@
+.navbar {
+    margin: 2% 4%
+}
+
+.nav-header {
+    color: orange;
+    font-weight: bold;
+    font-size: 40px;
+    font-family: Georgia, 'Times New Roman', Times, serif
+}
+
+.landing {
+    display: flex;
+    margin: 0 10%;
+    align-items: self-end
+}
+
+.name-input {
+    font-size: 18px;
+    padding-left: 4px;
+    margin: 0 5px 0 100px;
+    border: 1px solid #000000;
+    height: 30px;
+    width: 300px;
+    border-radius: 4px
+}
+
+.name-input:focus {
+    border: 2px solid #0A79DF;
+    outline: none;
+}
+
+.join-btn {
+    background-color: #0A79DF;
+    color: white;
+    font-size: 18px;
+    width: 120px;
+    height: 34px;
+    border: none;
+    border-radius: 4px
+}
+
+.room-container {
+    display: flex
+}
+
+.videos-container {
+    flex-grow: 1;
+    margin-left: 5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.videos-container #video {
+    border-radius: 22px;
+    margin-top: 5%;
+}
+
+.chat-container {
+    flex-grow: 3;
+}
