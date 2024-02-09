@@ -35,7 +35,7 @@ export const Landing = () => {
       <>
         <Navbar />
         <div className="landing">
-          <video autoPlay ref={videoRef} width={600} height={400}></video>
+          <video autoPlay ref={videoRef} width={600}></video>
             <input
               type="text"
               onChange={(e) => setName(e.target.value)}

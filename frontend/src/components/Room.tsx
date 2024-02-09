@@ -159,28 +159,24 @@ export const Room = ({ name, localAudioTrack, localVideoTrack }: RoomProps) => {
   }, [localVideoRef, localVideoTrack]);
 
   return (
-    <div>
+    <>
       <Navbar />
       <div className="room-container">
         <div className="videos-container">
           <video
             autoPlay
             className="remote-video"
-            width={400}
-            height={400}
             ref={remoteVideoRef}
           />
-          {lobby ? <p> Waiting to connect you to someone</p> : null}
+          {lobby ? <p className="lobby-text"> Waiting to connect you to someone</p> : null}
           <video
             autoPlay
             className="local-video"
-            width={400}
-            height={400}
             ref={localVideoRef}
           />
         </div>
         <div className="chat-container"></div>
       </div>
-    </div>
+    </>
   );
 };
