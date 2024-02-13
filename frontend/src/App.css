@@ -19,6 +19,12 @@ body{
     margin: 0 10%;
     align-items: center
 }
+@media only screen and (max-width: 1080px) {
+    .landing {
+        flex-direction: column;
+        gap: 1rem
+    }
+}
 .landing video {
     border-radius: 10px;
 }
@@ -40,7 +46,7 @@ body{
 .join-btn {
     background-color: #0A79DF;
     color: white;
-    font-size: 1.2rem;
+    font-size: 1rem;
     height: 34px;
     border: none;
     border-radius: 4px
@@ -58,7 +64,7 @@ body{
 }
 
 .remote-video {
-    width: 600px;
+    width: 550px;
     margin: 1% 0;
     border-radius: 10px;
 }
@@ -70,6 +76,21 @@ body{
     width: 250px;
     margin: 2% 0;
     border-radius: 5px;
+}
+.lower-video-area {
+    display:flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items:center;
+}
+.hang-up-btn {
+ background-color: #de1241;
+ border: none;
+ color: #f5f5f5;
+ font-size: 0.8rem;
+ width: 100px;
+ height: 30px;
+ border-radius: 18px;
 }
 .chat-container {
     flex-grow: 3;

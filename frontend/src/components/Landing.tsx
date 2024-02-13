@@ -24,11 +24,21 @@ export const Landing = () => {
     videoRef.current.srcObject = new MediaStream([videoTrack, audioTrack]);
     // videoRef.current.play()
   };
+  const handleHangup = () => {
+    setJoined(false)
+  }
+  const handleJoin = () => {
+    if(name === ""){
+      alert("Name is required")
+    } else {
+      setJoined(true)
+    }
+  }
   useEffect(() => {
     if (videoRef && videoRef.current) {
       getCam();
     }
-  }, [videoRef]);
+  }, [videoRef,joined]);
 
   if (!joined) {
     return (
@@ -43,7 +53,7 @@ export const Landing = () => {
               className="name-input"
               placeholder="Enter your name"
             />
-            <button className="join-btn" onClick={() => setJoined(true)}>Join room</button>
+            <button className="join-btn" onClick={handleJoin}>Join room</button>
         </div>
       </>
     );
@@ -54,6 +64,7 @@ export const Landing = () => {
       name={name}
       localAudioTrack={localAudioTrack}
       localVideoTrack={localVideoTrack}
+      onHangup={handleHangup}
     />
   );
 };

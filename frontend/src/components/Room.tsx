@@ -9,13 +9,20 @@ type RoomProps = {
   name: string;
   localAudioTrack: MediaStreamTrack | null;
   localVideoTrack: MediaStreamTrack | null;
+  onHangup: () => void;
 };
 
-export const Room = ({ name, localAudioTrack, localVideoTrack }: RoomProps) => {
+export const Room = ({
+  name,
+  localAudioTrack,
+  localVideoTrack,
+  onHangup,
+}: RoomProps) => {
   // const [searchParams, setSearchParams] = useSearchParams();
   // const name = searchParams.get("name");
   const [socket, setSocket] = useState<null | Socket>(null);
   const [lobby, setLobby] = useState(true);
+  const [roomId, setRoomId] = useState("");
   const [sendingPc, setSendingPc] = useState<null | RTCPeerConnection>(null);
   const [receivingPc, setReceivingPc] = useState<null | RTCPeerConnection>(
     null
@@ -23,10 +30,78 @@ export const Room = ({ name, localAudioTrack, localVideoTrack }: RoomProps) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
+  const handleRemoveTrackEvent = () => {
+    console.log("remove track triggered");
+    const stream = remoteVideoRef.current?.srcObject;
+    const trackList = (stream as MediaStream)?.getTracks();
+    if (trackList.length === 0) {
+      closeVideoCall();
+    }
+  };
+
+  const closeVideoCall = () => {
+    console.log("Closing");
+    const senders = sendingPc?.getSenders();
+    senders?.forEach((sender) => {
+      sendingPc?.removeTrack(sender);
+    });
+    setSendingPc((pc) => {
+      if (!pc) return pc;
+      pc.ontrack = null;
+      pc.onicecandidate = null;
+      pc.onnegotiationneeded = null;
+      // pc.oniceconnectionstatechange = null;
+      // pc.onsignalingstatechange = null;
+      // pc.onicegatheringstatechange = null;
+      return pc;
+    });
+    setReceivingPc((pc) => {
+      if (!pc) return pc;
+      pc.ontrack = null;
+      pc.onicecandidate = null;
+      pc.onnegotiationneeded = null;
+      // pc.oniceconnectionstatechange = null;
+      // pc.onsignalingstatechange = null;
+      // pc.onicegatheringstatechange = null;
+      return pc;
+    });
+    if (localVideoRef.current?.srcObject) {
+      (localVideoRef.current.srcObject as MediaStream)
+        .getTracks()
+        .forEach((track) => {
+          track.stop();
+        });
+    }
+    if (remoteVideoRef.current?.srcObject) {
+      (remoteVideoRef.current.srcObject as MediaStream)
+        .getTracks()
+        .forEach((track) => {
+          track.stop();
+        });
+    }
+
+    sendingPc?.close();
+    receivingPc?.close();
+    setSendingPc(null);
+    setReceivingPc(null);
+    localVideoRef.current?.removeAttribute("srcObject");
+    remoteVideoRef.current?.removeAttribute("srcObject");
+    onHangup();
+  };
+  const hangUpCall = () => {
+    closeVideoCall();
+    socket?.emit("hang-up", roomId);
+  };
+
   useEffect(() => {
-    const socket = io(URL);
+    const socket = io(URL,{
+      query: {
+        name
+      }
+    });
     socket.on("send-offer", async ({ roomId }: { roomId: string }) => {
       setLobby(false);
+      setRoomId(roomId);
       const pc = new RTCPeerConnection();
       setSendingPc(pc);
       if (localVideoTrack) {
@@ -70,6 +145,7 @@ export const Room = ({ name, localAudioTrack, localVideoTrack }: RoomProps) => {
           console.log("track added");
           if (!remoteStream) {
             remoteStream = new MediaStream();
+            remoteStream.onremovetrack = handleRemoveTrackEvent;
           }
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = remoteStream;
@@ -85,7 +161,6 @@ export const Room = ({ name, localAudioTrack, localVideoTrack }: RoomProps) => {
         //trickle ice
 
         pc.onicecandidate = async (e) => {
-          console.log("on ice candidate on receiving side");
           if (e.candidate) {
             socket.emit("new-ice-candidate", {
               candidate: e.candidate,
@@ -133,18 +208,21 @@ export const Room = ({ name, localAudioTrack, localVideoTrack }: RoomProps) => {
       setLobby(true);
     });
     socket.on("new-ice-candidate", ({ candidate, type }) => {
-      const iceCandidate = new RTCIceCandidate(candidate);
       if (type === "sender") {
         setReceivingPc((pc) => {
-          pc?.addIceCandidate(iceCandidate);
+          pc?.addIceCandidate(candidate);
           return pc;
         });
       } else {
         setSendingPc((pc) => {
-          pc?.addIceCandidate(iceCandidate);
+          pc?.addIceCandidate(candidate);
           return pc;
         });
       }
+    });
+    socket.on("hang-up", () => {
+      alert("The other person has ended the call")
+      closeVideoCall();
     });
     setSocket(socket);
   }, [name, localAudioTrack, localVideoTrack]);
@@ -158,22 +236,22 @@ export const Room = ({ name, localAudioTrack, localVideoTrack }: RoomProps) => {
     }
   }, [localVideoRef, localVideoTrack]);
 
+  
   return (
     <>
       <Navbar />
       <div className="room-container">
         <div className="videos-container">
-          <video
-            autoPlay
-            className="remote-video"
-            ref={remoteVideoRef}
-          />
-          {lobby ? <p className="lobby-text"> Waiting to connect you to someone</p> : null}
-          <video
-            autoPlay
-            className="local-video"
-            ref={localVideoRef}
-          />
+          <video autoPlay className="remote-video" ref={remoteVideoRef} />
+          {lobby ? (
+            <p className="lobby-text"> Waiting to connect you to someone</p>
+          ) : null}
+          <div className="lower-video-area">
+            <button className="hang-up-btn" onClick={hangUpCall}>
+              Hang up
+            </button>
+            <video autoPlay className="local-video" ref={localVideoRef} />
+          </div>
         </div>
         <div className="chat-container"></div>
       </div>

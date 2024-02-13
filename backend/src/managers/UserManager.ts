@@ -27,10 +27,11 @@ export class UserManager {
 
     removeUser(socketId: string) {
         const user = this.users.find(x => x.socket.id === socketId)
-
         this.users = this.users.filter(x => x.socket.id !== socketId)
-        // TODO:
-        this.queue = this.queue.filter(x => x === socketId)
+
+        this.queue = this.queue.filter(x => x !== socketId)
+        console.log("User: %s removed",user?.name)
+
     }
 
     clearQueue(){
@@ -47,6 +48,7 @@ export class UserManager {
             return
 
         const room = this.roomManager.createRoom(user1,user2)
+        console.log("Room:",room)
         this.clearQueue()
     }
 
@@ -59,6 +61,14 @@ export class UserManager {
         })
         socket.on("new-ice-candidate",({candidate,roomId,type}: {candidate: any,roomId: string,type: "sender" | "receiver"}) => {
             this.roomManager.onIceCandidate(candidate,roomId,type,socket.id)
+        })
+        socket.on("hang-up",(roomId: string) => {
+            const room = this.roomManager.onHangup(roomId,socket.id)
+            if(room){
+                this.removeUser(room.user1.socket.id)
+                this.removeUser(room.user2.socket.id)
+                this.roomManager.deleteRoom(roomId)
+            }
         })
     }
 }

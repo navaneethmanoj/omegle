@@ -25,14 +25,23 @@ export class RoomManager {
             roomId
         })
     }
+    onHangup(roomId: string,senderSocketId: string): Room | undefined {
+        const roomToDelete = this.rooms.get(roomId)
 
+        const receivingUser = roomToDelete?.user1.socket.id === senderSocketId ? roomToDelete.user2 : roomToDelete?.user1
+        receivingUser?.socket.emit("hang-up")
+        return roomToDelete
+    }
+    deleteRoom(roomId: string){
+        this.rooms.delete(roomId)
+    }
     onOffer(sdp: any, roomId: string, senderSocketId: string ) {
         const room = this.rooms.get(roomId)
         if(!room)
             return
         const receivingUser = room.user1.socket.id === senderSocketId ? room.user2 : room.user1
         console.log("Rooms:",this.rooms)
-        console.log("forwarding offer to user2:",room.user2?.socket.id)
+        console.log("forwarding offer to user2:",room.user2?.name)
         receivingUser?.socket.emit("offer", {
             sdp,
             roomId
